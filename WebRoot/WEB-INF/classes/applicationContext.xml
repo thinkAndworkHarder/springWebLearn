@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+           http://www.springframework.org/schema/beans/spring-beans.xsd
+           http://www.springframework.org/schema/context
+           http://www.springframework.org/schema/context/spring-context-3.2.xsd
+           http://www.springframework.org/schema/aop
+           http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+	<bean id="knife" class="com.jeb.springlearn.beans.Knife" />
+	<bean id="knifeWithLength" class="com.jeb.springlearn.beans.Knife">
+		<constructor-arg name="length" value="20" />
+		<constructor-arg name="name" value="刀子" />
+	</bean>
+
+	<bean id="fork" class="com.jeb.springlearn.beans.Fork"
+		factory-method="getInstance" />
+
+	<bean id="person" class="com.jeb.springlearn.beans.Person">
+		<!-- <constructor-arg name="name" value="张三" /> <constructor-arg name="age" 
+			value="45"/> <constructor-arg name="tool" ref="knife"/> -->
+		<property name="name" value="李四" />
+		<property name="age" value="44" />
+		<property name="tool" ref="knife" />
+		<property name="favorites">
+			<list>
+				<value>play piano</value>
+				<value>play pinpang</value>
+				<value>play basketball</value>
+			</list>
+		</property>
+		<property name="friends">
+			<map>
+				<entry key="zhangsan" value="12" />
+				<entry key="lisi" value="14" />
+				<entry key="wangwu" value="22" />
+			</map>
+		</property>
+	</bean>
+
+	<!-- <bean id="computer" class="com.jeb.springlearn.beans.Computer"
+		init-method="startUp" destroy-method="shutDown">
+		<constructor-arg name="brand" value="lenove" />
+	</bean> -->
+
+	<!-- <bean id="tv" class="com.jeb.springlearn.beans.TV" /> -->
+
+	<!-- 一个bean的bean属性，有多个bean可以装配（使用byType进行自动装配，与需要自动装配的属性的类型相同的 存在多个）。 -->
+	<bean id="student" class="com.jeb.springlearn.beans.autowire.Student"/>
+	
+	<!-- <bean id="chineseSubject" class="com.jeb.springlearn.beans.autowire.ChineseSubject">
+		<constructor-arg name="name" value="语文"/>
+	</bean>
+	<bean id="englishSubject" class="com.jeb.springlearn.beans.autowire.EnglishSubject">
+		<constructor-arg name="name" value="英语"></constructor-arg>
+	</bean> -->
+	
+	<context:annotation-config/>
+	<bean id="teacher" class="com.jeb.springlearn.beans.autowire.Teacher"/>
+	<bean id="clazz" class="com.jeb.springlearn.beans.autowire.Clazz"/>
+	
+	<!-- 使用@Value获取properties文件的数据 -->
+	<bean id="myProperties" class="org.springframework.beans.factory.config.PropertiesFactoryBean">
+		<property name="locations">
+			<list>
+				<value>classpath:/value.properties</value>
+			</list>
+		</property>
+	</bean>
+	<bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PreferencesPlaceholderConfigurer">
+		<property name="properties" ref="myProperties"/>
+	</bean>
+	
+	<!-- 开启自动检测配置 -->
+	<context:component-scan base-package="com.jeb">
+		<context:include-filter type="assignable" expression="com.jeb.springlearn.beans.autowire.Subject"/>
+	</context:component-scan>
+	
+	
+	<!-- aop -->
+	<aop:config proxy-target-class="true">
+		<aop:aspect id="singAspect" ref="electrician">
+			<!-- 切点及通知的基本配置 -->
+			<aop:pointcut id="electricianControl" expression="execution(* com.jeb.springlearn.beans.aop.xmlAOP.Singer.sing(..))"/>
+			<aop:before method="lightOn" pointcut-ref="electricianControl"/>
+			<aop:after-returning method="lightOff" pointcut-ref="electricianControl"/>
+			<aop:after-throwing method="compereSay"  pointcut-ref="electricianControl"/>
+			<aop:around method="computeTimeLength" pointcut-ref="electricianControl"/>
+			
+			<!-- 为通知传递参数 -->
+			<aop:pointcut id="speakWords" expression="execution(* com.jeb.springlearn.beans.aop.xmlAOP.Singer.sayWords(String, ..)) 
+				and args(words1, words2)"/>
+			<aop:before method="validateWords" pointcut-ref="speakWords" arg-names="words1, words2"/>
+			
+			<!-- 为类增加新的方法 -->
+			<aop:declare-parents types-matching="com.jeb.springlearn.beans.aop.xmlAOP.Singer" 
+				implement-interface="com.jeb.springlearn.beans.aop.xmlAOP.Swim"
+				delegate-ref="defaultSwim"/>
+		</aop:aspect>
+	</aop:config>
+	
+	<!-- 开启Spring对于@AspectJ注解的支持配置 -->
+	<aop:aspectj-autoproxy/>
+	
+	<!-- 配置数据源 -->
+	<bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+		<property name="driverClassName" value="com.mysql.jdbc.Driver"/>
+		<property name="url" value="${jdbc.url}"/>
+		<property name="username" value="${jdbc.username}"/>
+		<property name="password" value="${jdbc.password}"/>
+		<property name="initialSize" value="${jdbc.initialSize}"/>
+		<property name="minIdle" value="${jdbc.minIdle"/>
+		<property name="maxActive" value="${jdbc.maxActive"/>
+		<property name="timeBetweenEvictionRunsMillis" value="${jdbc.timeBetweenEvictionRunsMillis"/>
+		<property name="minEvictableIdleTimeMillis" value="${jdbc.minEvictableIdleTimeMillis"/>
+	</bean>
+</beans>
